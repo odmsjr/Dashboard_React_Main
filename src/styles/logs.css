@@ -1,0 +1,235 @@
+/* ============================================================ */
+/* LOGS / HISTORY TAB STYLES */
+/* ============================================================ */
+
+.logs-container {
+    background-color: #161b22;
+    border-radius: 12px;
+    border: 1px solid #30363d;
+    overflow: hidden;
+}
+
+.logs-header {
+    padding: 20px;
+    border-bottom: 1px solid #30363d;
+}
+
+.header-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.logs-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e6edf3;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.last-update-badge {
+    font-size: 12px;
+    color: #8b949e;
+    background: #21262d;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid #30363d;
+}
+
+.logs-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #30363d;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-select-small {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #e6edf3;
+    font-size: 12px;
+    cursor: pointer;
+    min-width: 140px;
+}
+
+.filter-input-small {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #e6edf3;
+    font-size: 12px;
+    width: 200px;
+}
+
+.date-filter-input {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #e6edf3;
+    font-size: 12px;
+}
+
+.filter-btn {
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    color: #e6edf3;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    background-color: #30363d;
+    border-color: #8b949e;
+}
+
+.clear-btn:hover {
+    background-color: #d44a3a;
+    border-color: #d44a3a;
+    color: white;
+}
+
+.logs-table-wrapper {
+    overflow-x: auto;
+}
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: fixed;
+}
+
+.logs-table th {
+    text-align: left;
+    padding: 12px 16px;
+    background-color: #0d1117;
+    color: #8b949e;
+    font-weight: 500;
+    border-bottom: 1px solid #30363d;
+}
+
+.logs-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #21262d;
+    color: #e6edf3;
+    vertical-align: top;
+}
+
+.logs-table tr:hover td {
+    background-color: #21262d;
+}
+
+.logs-table th:nth-child(1),
+.logs-table td:nth-child(1) {
+    width: 18%;
+}
+
+.logs-table th:nth-child(2),
+.logs-table td:nth-child(2) {
+    width: 18%;
+}
+
+.logs-table th:nth-child(3),
+.logs-table td:nth-child(3) {
+    width: 34%;
+}
+
+.logs-table th:nth-child(4),
+.logs-table td:nth-child(4) {
+    width: 15%;
+}
+
+.logs-table th:nth-child(5),
+.logs-table td:nth-child(5) {
+    width: 15%;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-badge-critical {
+    background-color: #d44a3a;
+    color: white;
+}
+
+.status-badge-warning {
+    background-color: #ff9830;
+    color: white;
+}
+
+.status-badge-unknown {
+    background-color: #808080;
+    color: white;
+}
+
+.status-badge-acknowledged {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.status-badge-recovered {
+    background-color: #238636;
+    color: white;
+}
+
+.timestamp-cell {
+    font-family: monospace;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.logs-table td:nth-child(3) {
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+    font-size: 11px;
+    color: #8b949e;
+}
+
+.logs-table td:nth-child(1),
+.logs-table td:nth-child(2) {
+    font-weight: 500;
+    word-wrap: break-word;
+}
+
+.logs-table td:nth-child(1) {
+    color: #88ccff;
+}
+
+.logs-table td:nth-child(2) {
+    color: #ff6b6b;
+}
