@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import { useData } from '../contexts/DataContext';
-import '../styles/style.css';
+import '../styles/pollers.css';
 
 const Pollers = () => {
   const navigate = useNavigate();
@@ -23,27 +23,8 @@ const Pollers = () => {
   const [summary, setSummary] = useState({ critical: 0, warning: 0, unknown: 0, total: 0 });
   
   const [refreshInterval, setRefreshInterval] = useState(60);
-  const [countdown, setCountdown] = useState(60);
-  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
   const refreshTimerRef = useRef(null);
   const initialLoadDone = useRef(false);
-
-  // Calculate summary from pollers data
-  useEffect(() => {
-    if (pollers && pollers.length > 0) {
-      const totalCritical = pollers.reduce((sum, p) => sum + (p.Critical || 0), 0);
-      const totalWarning = pollers.reduce((sum, p) => sum + (p.Warning || 0), 0);
-      const totalUnknown = pollers.reduce((sum, p) => sum + (p.Unknown || 0), 0);
-      const totalAll = totalCritical + totalWarning + totalUnknown;
-      
-      setSummary({
-        critical: totalCritical,
-        warning: totalWarning,
-        unknown: totalUnknown,
-        total: totalAll
-      });
-    }
-  }, [pollers]);
 
   // Apply search filter
   const applyFilters = useCallback(() => {
@@ -62,6 +43,31 @@ const Pollers = () => {
     setFilteredPollers(filtered);
     setCurrentPage(1);
   }, [pollers, searchTerm]);
+
+  // Calculate filtered summary from filteredPollers
+  useEffect(() => {
+    if (filteredPollers && filteredPollers.length > 0) {
+      const totalCritical = filteredPollers.reduce((sum, p) => sum + (p.Critical || 0), 0);
+      const totalWarning = filteredPollers.reduce((sum, p) => sum + (p.Warning || 0), 0);
+      const totalUnknown = filteredPollers.reduce((sum, p) => sum + (p.Unknown || 0), 0);
+      const totalAll = totalCritical + totalWarning + totalUnknown;
+      
+      setSummary({
+        critical: totalCritical,
+        warning: totalWarning,
+        unknown: totalUnknown,
+        total: totalAll
+      });
+    } else {
+      // If no filtered pollers, show zeros
+      setSummary({
+        critical: 0,
+        warning: 0,
+        unknown: 0,
+        total: 0
+      });
+    }
+  }, [filteredPollers]);
 
   // Apply pagination
   useEffect(() => {
@@ -97,22 +103,13 @@ const Pollers = () => {
       refreshTimerRef.current = null;
     }
     
-    if (!isAutoRefreshEnabled || refreshInterval === 0) {
-      setCountdown(0);
+    if (refreshInterval === 0) {
       return;
     }
     
-    setCountdown(refreshInterval);
-    
     refreshTimerRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          silentRefresh();
-          return refreshInterval;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      silentRefresh();
+    }, refreshInterval * 1000);
     
     return () => {
       if (refreshTimerRef.current) {
@@ -120,7 +117,7 @@ const Pollers = () => {
         refreshTimerRef.current = null;
       }
     };
-  }, [refreshInterval, isAutoRefreshEnabled, silentRefresh]);
+  }, [refreshInterval, silentRefresh]);
 
   // Handle page change
   const handlePageChange = (direction) => {
@@ -141,7 +138,6 @@ const Pollers = () => {
 
   // Handle refresh
   const handleRefresh = () => {
-    setCountdown(refreshInterval);
     silentRefresh();
   };
 
@@ -149,8 +145,6 @@ const Pollers = () => {
   const handleIntervalChange = (e) => {
     const val = parseInt(e.target.value);
     setRefreshInterval(val);
-    setCountdown(val);
-    setIsAutoRefreshEnabled(val > 0);
   };
 
   // Navigate to dashboard with poller filter
@@ -176,118 +170,109 @@ const Pollers = () => {
 
   return (
     <Layout onRefresh={handleRefresh} lastUpdate={lastUpdate}>
-      <div className="content-header">
-        <h1>Pollers</h1>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <select 
-            className="dashboard-page-size-select"
-            value={refreshInterval}
-            onChange={handleIntervalChange}
-            style={{ width: '70px' }}
-          >
-            <option value="15">15s</option>
-            <option value="30">30s</option>
-            <option value="60">60s</option>
-            <option value="120">2m</option>
-            <option value="300">5m</option>
-            <option value="0">Off</option>
-          </select>
-          <button className="refresh-btn" onClick={handleRefresh}>
-            🔄 Refresh
-          </button>
-        </div>
-      </div>
+      <div className="pollers-container">
+        {/* Header */}
+        <div className="pollers-header">
+          <div className="header-top-row">
+            <h2>Pollers</h2>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <select 
+                className="page-size-select"
+                value={refreshInterval}
+                onChange={handleIntervalChange}
+                style={{ width: '70px' }}
+              >
+                <option value="15">15s</option>
+                <option value="30">30s</option>
+                <option value="60">60s</option>
+                <option value="120">2m</option>
+                <option value="300">5m</option>
+                <option value="0">Off</option>
+              </select>
+              <button className="refresh-btn-small" onClick={handleRefresh}>
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
 
-      <div className="top-row">
-        <div className="filter-section" style={{ width: '100%' }}>
-          <div className="filter-controls-vertical">
-            <div className="filter-input-group">
-              <label>Search Pollers</label>
+          {/* Summary Stats Cards - Now synced with search */}
+          <div className="poller-stats-summary">
+            <div className="stat-summary-card total">
+              <div className="stat-label">Total Issues</div>
+              <div className="stat-value">{summary.total}</div>
+            </div>
+            <div className="stat-summary-card critical">
+              <div className="stat-label">Critical</div>
+              <div className="stat-value">{summary.critical}</div>
+            </div>
+            <div className="stat-summary-card warning">
+              <div className="stat-label">Warning</div>
+              <div className="stat-value">{summary.warning}</div>
+            </div>
+            <div className="stat-summary-card unknown">
+              <div className="stat-label">Unknown</div>
+              <div className="stat-value">{summary.unknown}</div>
+            </div>
+          </div>
+
+          {/* Search and Pagination */}
+          <div className="search-pagination-row">
+            <div className="search-bar">
               <input
                 type="text"
-                className="filter-input"
-                placeholder="Filter by poller name..."
+                className="search-input"
+                placeholder="🔍 Search pollers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-          </div>
-        </div>
-        <div className="stats-grid">
-          <div className="stat-card all" style={{ borderLeftColor: '#58a6ff' }}>
-            <div className="stat-number" style={{ color: '#58a6ff' }}>{summary.total}</div>
-            <div className="stat-label">TOTAL ISSUES</div>
-          </div>
-          <div className="stat-card critical">
-            <div className="stat-number">{summary.critical}</div>
-            <div className="stat-label">CRITICAL</div>
-          </div>
-          <div className="stat-card warning">
-            <div className="stat-number">{summary.warning}</div>
-            <div className="stat-label">WARNING</div>
-          </div>
-          <div className="stat-card unknown">
-            <div className="stat-number">{summary.unknown}</div>
-            <div className="stat-label">UNKNOWN</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="services-section">
-        <div className="section-header">
-          <div className="section-header-left">
-            <h3 className="section-title">Pollers</h3>
-            <span className="service-count">{filteredPollers.length}</span>
-          </div>
-          <div className="dashboard-pagination-controls">
-            <span className="dashboard-pagination-label">Show:</span>
-            <select 
-              className="dashboard-page-size-select" 
-              value={pageSize}
-              onChange={handlePageSizeChange}
-            >
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="30">30</option>
-              <option value="40">40</option>
-              <option value="50">50</option>
-              <option value="60">60</option>
-              <option value="70">70</option>
-              <option value="80">80</option>
-              <option value="90">90</option>
-              <option value="100">100</option>
-              <option value="all">All</option>
-            </select>
-            <div className="dashboard-pagination-buttons">
-              <button 
-                className="dashboard-page-btn" 
-                onClick={() => handlePageChange(-1)}
-                disabled={currentPage <= 1 || totalPages === 0}
+            <div className="pagination-controls">
+              <span className="pagination-label">Show:</span>
+              <select 
+                className="page-size-select" 
+                value={pageSize}
+                onChange={handlePageSizeChange}
               >
-                ◀ Prev
-              </button>
-              <span className="dashboard-page-info">
-                Page {totalPages === 0 ? 0 : currentPage} of {totalPages === 0 ? 0 : totalPages}
-              </span>
-              <button 
-                className="dashboard-page-btn" 
-                onClick={() => handlePageChange(1)}
-                disabled={currentPage >= totalPages || totalPages === 0}
-              >
-                Next ▶
-              </button>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
+              <div className="pagination-buttons">
+                <button 
+                  className="page-btn" 
+                  onClick={() => handlePageChange(-1)}
+                  disabled={currentPage <= 1 || totalPages === 0}
+                >
+                  ◀ Prev
+                </button>
+                <span className="page-info">
+                  {totalPages === 0 ? 0 : currentPage} / {totalPages === 0 ? 0 : totalPages}
+                </span>
+                <button 
+                  className="page-btn" 
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage >= totalPages || totalPages === 0}
+                >
+                  Next ▶
+                </button>
+              </div>
             </div>
           </div>
         </div>
-        <div className="table-wrapper">
-          <table className="services-table">
+
+        {/* Table */}
+        <div className="pollers-table-wrapper">
+          <table className="pollers-table">
             <thead>
               <tr>
-                <th style={{ width: '35%' }}>Poller</th>
-                <th style={{ width: '15%', textAlign: 'center' }}>Critical</th>
-                <th style={{ width: '15%', textAlign: 'center' }}>Warning</th>
-                <th style={{ width: '15%', textAlign: 'center' }}>Unknown</th>
-                <th style={{ width: '20%', textAlign: 'center' }}>Total</th>
+                <th>Poller</th>
+                <th>Critical</th>
+                <th>Warning</th>
+                <th>Unknown</th>
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>
@@ -297,7 +282,6 @@ const Pollers = () => {
                 </tr>
               ) : (
                 paginatedPollers.map((poller, index) => {
-                  // Safety check: if poller is not an object, skip
                   if (!poller || typeof poller !== 'object') {
                     return null;
                   }
@@ -305,49 +289,30 @@ const Pollers = () => {
                   return (
                     <tr key={index}>
                       <td 
-                        className="poller-name" 
+                        className="poller-name clickable-poller" 
                         onClick={() => navigateToDashboard(poller.Poller || 'Unknown')}
-                        style={{ cursor: 'pointer', color: '#88ccff', fontWeight: '500' }}
                       >
                         {poller.Poller || 'Unknown'}
                       </td>
                       <td 
-                        className="critical-number" 
+                        className="critical-number clickable-number" 
                         onClick={() => navigateToDashboard(poller.Poller || 'Unknown', 'critical')}
-                        style={{ 
-                          cursor: 'pointer', 
-                          textAlign: 'center',
-                          color: '#d44a3a',
-                          fontWeight: 'bold'
-                        }}
                       >
                         {poller.Critical || 0}
                       </td>
                       <td 
-                        className="warning-number" 
+                        className="warning-number clickable-number" 
                         onClick={() => navigateToDashboard(poller.Poller || 'Unknown', 'warning')}
-                        style={{ 
-                          cursor: 'pointer', 
-                          textAlign: 'center',
-                          color: '#ff9830',
-                          fontWeight: 'bold'
-                        }}
                       >
                         {poller.Warning || 0}
                       </td>
                       <td 
-                        className="unknown-number" 
+                        className="unknown-number clickable-number" 
                         onClick={() => navigateToDashboard(poller.Poller || 'Unknown', 'unknown')}
-                        style={{ 
-                          cursor: 'pointer', 
-                          textAlign: 'center',
-                          color: '#8b949e',
-                          fontWeight: 'bold'
-                        }}
                       >
                         {poller.Unknown || 0}
                       </td>
-                      <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#e6edf3' }}>
+                      <td className="total-number">
                         {(poller.Critical || 0) + (poller.Warning || 0) + (poller.Unknown || 0)}
                       </td>
                     </tr>
@@ -356,6 +321,12 @@ const Pollers = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Footer */}
+        <div className="table-count">
+          Showing {paginatedPollers.length} of {filteredPollers.length} pollers
+          {lastUpdate && ` • Last updated: ${lastUpdate}`}
         </div>
       </div>
     </Layout>

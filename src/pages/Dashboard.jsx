@@ -400,7 +400,7 @@ const Dashboard = () => {
               <tr>
                 <th>Host</th>
                 <th>Service</th>
-                <th>Output</th>
+                <th>Status Information</th>
                 <th 
                   className="sortable-header"
                   onClick={() => handleSort('duration')}
