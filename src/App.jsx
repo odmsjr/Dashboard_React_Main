@@ -5,6 +5,7 @@ import { DataProvider } from './contexts/DataContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Pollers from './pages/Pollers';
+import AlertLogs from './pages/AlertLogs';  // <-- ADD THIS
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -25,6 +26,11 @@ function AppRoutes() {
       <Route path="/pollers" element={
         <ProtectedRoute>
           <Pollers />
+        </ProtectedRoute>
+      } />
+      <Route path="/alertlogs" element={  // <-- ADD THIS
+        <ProtectedRoute>
+          <AlertLogs />
         </ProtectedRoute>
       } />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

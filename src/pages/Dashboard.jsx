@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import Layout from '../components/Layout/Layout';
 import StatsCards from '../components/Dashboard/StatsCards';
@@ -8,8 +7,6 @@ import { useData } from '../contexts/DataContext';
 import '../styles/style.css';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  
   // Use shared data from context
   const {
     counts,
@@ -21,12 +18,6 @@ const Dashboard = () => {
     loadAllData,
     silentRefresh,
     updateAckStatus,
-    setCounts,
-    setPollers,
-    setAllServices,
-    setAckStatus,
-    setLastUpdate,
-    setLoading,
   } = useData();
 
   // Local state
@@ -48,12 +39,43 @@ const Dashboard = () => {
   });
   
   // Auto-refresh state
-  const [refreshInterval, setRefreshInterval] = useState(60);
+  const [refreshInterval] = useState(60);
   const [countdown, setCountdown] = useState(60);
-  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
+  const [isAutoRefreshEnabled] = useState(true);
   
   const refreshTimerRef = useRef(null);
   const initialLoadDone = useRef(false);
+
+  // Get status badge class
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 'critical': return 'status-badge-critical';
+      case 'warning': return 'status-badge-warning';
+      case 'unknown': return 'status-badge-unknown';
+      default: return 'status-badge-ok';
+    }
+  };
+
+  // Get acknowledge button color based on status
+  const getAckButtonColor = (status) => {
+    switch (status) {
+      case 'critical': return '#d44a3a';
+      case 'warning': return '#ff9830';
+      case 'unknown': return '#6b7280';
+      default: return '#238636';
+    }
+  };
+
+  // Get row highlight class - Priority: Acknowledged > Critical > Warning > Unknown
+  const getRowClass = (status, isAcknowledged) => {
+    if (isAcknowledged) return 'row-acknowledged';
+    switch (status) {
+      case 'critical': return 'row-critical';
+      case 'warning': return 'row-warning';
+      case 'unknown': return 'row-unknown';
+      default: return '';
+    }
+  };
 
   // Parse duration string to seconds for sorting
   const parseDurationToSeconds = (durationStr) => {
@@ -71,7 +93,7 @@ const Dashboard = () => {
   };
 
   // Sort services
-  const sortServices = (services, sortKey, direction) => {
+  const sortServices = useCallback((services, sortKey, direction) => {
     if (!sortKey) return services;
     
     const sorted = [...services];
@@ -92,7 +114,7 @@ const Dashboard = () => {
     });
     
     return sorted;
-  };
+  }, []);
 
   // Apply filters to services
   const applyFilters = useCallback((status, currentFilters) => {
@@ -134,7 +156,7 @@ const Dashboard = () => {
       warning: warningCount, 
       unknown: unknownCount 
     });
-  }, [allServices, sortConfig.key, sortConfig.direction]);
+  }, [allServices, sortConfig.key, sortConfig.direction, sortServices]);
 
   // Apply pagination to filtered services
   useEffect(() => {
@@ -160,7 +182,6 @@ const Dashboard = () => {
   }, [allServices, activeStatus, filters, sortConfig.key, sortConfig.direction, applyFilters]);
 
   // Check for poller filter from navigation
-// Check for poller filter from navigation
   useEffect(() => {
     const targetPoller = localStorage.getItem('poller_filter_target');
     const targetType = localStorage.getItem('poller_filter_type');
@@ -298,7 +319,6 @@ const Dashboard = () => {
     silentRefresh();
   };
 
-
   const getStatusTitle = () => {
     if (activeStatus === 'all') return 'All Services';
     return activeStatus.charAt(0).toUpperCase() + activeStatus.slice(1) + ' Services';
@@ -306,7 +326,6 @@ const Dashboard = () => {
 
   // Calculate pagination info
   const totalItems = filteredServices.length;
-  const currentPageSize = pageSize === 'all' ? totalItems : pageSize;
   const totalPages = Math.ceil(totalItems / (pageSize === 'all' ? totalItems || 1 : pageSize));
 
   // Get sort indicator
@@ -401,6 +420,7 @@ const Dashboard = () => {
                 <th>Host</th>
                 <th>Service</th>
                 <th>Status Information</th>
+                <th>Status</th>
                 <th 
                   className="sortable-header"
                   onClick={() => handleSort('duration')}
@@ -415,7 +435,7 @@ const Dashboard = () => {
             <tbody>
               {paginatedServices.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="loading-cell">No services found</td>
+                  <td colSpan="7" className="loading-cell">No services found</td>
                 </tr>
               ) : (
                 paginatedServices.map((service, index) => {
@@ -423,15 +443,22 @@ const Dashboard = () => {
                   const ackInfo = ackStatus[serviceKey] || { acknowledged: false };
                   const isAcknowledging = acknowledging[serviceKey] || false;
                   
+                  // Get status and row class
+                  const status = service.status || 'unknown';
+                  const statusBadgeClass = getStatusBadgeClass(status);
+                  const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
+                  const rowClass = getRowClass(status, ackInfo.acknowledged);
+                  const statusColor = getAckButtonColor(status);
+
                   let ackColumn;
                   if (ackInfo.acknowledged) {
                     ackColumn = (
                       <button 
                         className="ack-btn acknowledged"
                         onClick={() => handleAcknowledge(serviceKey, service.host, service.service, true)}
-                        disabled={isAcknowledging}
+                        style={{ backgroundColor: '#2ea043', color: 'white', border: 'none' }}
                       >
-                        {isAcknowledging ? '...' : 'Acknowledged'}
+                        Acknowledged
                       </button>
                     );
                   } else {
@@ -439,9 +466,9 @@ const Dashboard = () => {
                       <button 
                         className="ack-btn acknowledge"
                         onClick={() => handleAcknowledge(serviceKey, service.host, service.service, false)}
-                        disabled={isAcknowledging}
+                        style={{ backgroundColor: statusColor, color: 'white', border: 'none' }}
                       >
-                        {isAcknowledging ? '...' : 'Acknowledge'}
+                        Acknowledge
                       </button>
                     );
                   }
@@ -459,10 +486,15 @@ const Dashboard = () => {
                   }
                   
                   return (
-                    <tr key={index}>
+                    <tr key={index} className={rowClass}>
                       <td className="host-name">{service.host}</td>
                       <td className="service-name">{service.service}</td>
                       <td className="service-output">{service.output}</td>
+                      <td>
+                        <span className={`status-badge ${statusBadgeClass}`}>
+                          {statusDisplay}
+                        </span>
+                      </td>
                       <td style={{ color: '#8b949e' }}>{service.duration}</td>
                       <td className="ack-cell">{ackColumn}</td>
                       <td className="ack-by-cell">{ackByColumn}</td>

@@ -26,10 +26,14 @@ const Sidebar = ({ onRefresh, lastUpdate }) => {
           <span className="nav-icon">📡</span>
           <span className="nav-text">Pollers</span>
         </Link>
-        <a href="#" className="nav-item" data-page="sla">
+        <Link to="/alertlogs" className={`nav-item ${isActive('/alertlogs')}`}>  {/* <-- ADD THIS */}
+          <span className="nav-icon">📜</span>
+          <span className="nav-text">Alert Logs</span>
+        </Link>
+        <button className="nav-item" data-page="sla" style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}>
           <span className="nav-icon">📊</span>
           <span className="nav-text">Ceva Monitoring SLA</span>
-        </a>
+        </button>
       </nav>
       <div className="sidebar-footer">
         <div className="refresh-info">
